@@ -2,9 +2,8 @@
 
 A falling-sand style cellular automaton sandbox that runs entirely in the browser. No dependencies, no build step — just open `index.html`.
 
-**[▶ Play it here](https://YOUR_USERNAME.github.io/elemental-sandbox/)** (via GitHub Pages)
 
-![Elements](https://img.shields.io/badge/elements-7-58a6ff) ![Deps](https://img.shields.io/badge/dependencies-0-brightgreen) ![License](https://img.shields.io/badge/license-MIT-blue)
+
 
 ## Elements
 
