@@ -10,7 +10,7 @@ A falling-sand style cellular automaton sandbox that runs entirely in the browse
 | Element | Behavior |
 |---|---|
 |  **Sand** | Falls, piles up, sinks through water |
-|  **Water** | Flows and spreads horizontally, shimmers |
+|  **Water** | Flows and spreads horizontally, shimmers | 
 |  **Wood** | Solid platform, flammable |
 |  **Fire** | Rises, ignites wood & plants, turns water into steam |
 |  **Plant** | Slowly grows into adjacent water, flammable |
