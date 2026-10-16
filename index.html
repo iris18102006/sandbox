@@ -529,7 +529,9 @@
     flash('world loaded ✔');
   };
   document.getElementById('pngBtn').onclick = () => {
-    render(); // make sure the canvas is current
+    const h = hover; hover = null; // don't bake the brush ring into the image
+    render();
+    hover = h;
     canvas.toBlob(blob => {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
