@@ -16,6 +16,9 @@ A falling-sand style cellular automaton sandbox that runs entirely in the browse
 |  **Plant** | Slowly grows into adjacent water, flammable |
 |  **Microbe** | Swims in water, eats plants, reproduces by splitting, dies of old age |
 |  **Steam** | Rises from fire + water, condenses back into water |
+|  **Oil** | Floats on water, sand sinks through it, burns for a long time |
+|  **Lava** | Thick slow liquid, ignites wood/plants/oil, turns to stone when it touches water |
+|  **Stone** | Solid left behind when lava cools |
 |  **Wall** | Indestructible solid |
 
 ## Microbes
@@ -34,7 +37,20 @@ Microbes are simple autonomous agents with an energy system:
 - **Brush size** — slider in the control bar
 - **Pause / Play** — freeze the simulation
 - **Clear** — wipe the world
+- **Speed** — 0.5x to 4x simulation speed
+- **Save / Load** — keep one world in your browser (localStorage)
+- **PNG** — download the current canvas as an image
 - **Grid** — toggle a faint grid overlay
+
+## Keyboard shortcuts
+
+| Key | Action |
+|---|---|
+| `1`-`9`, `0` | Pick tool |
+| `Space` | Pause / play |
+| `C` | Clear |
+| `G` | Toggle grid |
+| `[` / `]` | Smaller / bigger brush |
 
 ## Running locally
 
