@@ -82,6 +82,7 @@
   <label>Brush <input type="range" id="brushSize" min="1" max="20" value="4"><span id="brushVal">4</span></label>
   <label>Shape <select id="brushShape"><option value="circle">● Circle</option><option value="square">■ Square</option></select></label>
   <button class="action-btn" id="pauseBtn">⏸ Pause</button>
+  <button class="action-btn" id="undoBtn">↩ Undo</button>
   <button class="action-btn" id="clearBtn">🗑 Clear</button>
   <button class="action-btn" id="saveBtn">💾 Save</button>
   <button class="action-btn" id="loadBtn">📂 Load</button>
@@ -193,24 +194,40 @@
     const py = ((e.touches ? e.touches[0].clientY : e.clientY) - rect.top) * scale;
     return [Math.floor(px/CELL), Math.floor(py/CELL)];
   }
-  canvas.addEventListener('mousedown', e => { drawing=true; const [x,y]=canvasPos(e); paint(x,y); });
+  canvas.addEventListener('mousedown', e => { pushUndo(); drawing=true; const [x,y]=canvasPos(e); paint(x,y); });
   canvas.addEventListener('mousemove', e => { const [x,y]=canvasPos(e); hover=[x,y]; if(!drawing) return; paint(x,y); });
   canvas.addEventListener('mouseleave', () => { hover=null; });
   window.addEventListener('mouseup', () => drawing=false);
-  canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing=true; const [x,y]=canvasPos(e); paint(x,y); }, {passive:false});
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); pushUndo(); drawing=true; const [x,y]=canvasPos(e); paint(x,y); }, {passive:false});
   canvas.addEventListener('touchmove', e => { e.preventDefault(); if(!drawing) return; const [x,y]=canvasPos(e); paint(x,y); }, {passive:false});
   window.addEventListener('touchend', () => drawing=false);
+
+  // ---------- Undo ----------
+  const undoStack = [];
+  function pushUndo() {
+    undoStack.push(Uint8Array.from(grid, c => c.t));
+    if (undoStack.length > 15) undoStack.shift();
+  }
+  function undo() {
+    const s = undoStack.pop();
+    if (!s) return false;
+    for (let i=0;i<grid.length;i++) grid[i] = makeCell(s[i]);
+    return true;
+  }
 
   // ---------- Simulation ----------
   let paused = false;
   const pauseBtn = document.getElementById('pauseBtn');
   pauseBtn.onclick = () => { paused=!paused; pauseBtn.textContent = paused?'▶ Play':'⏸ Pause'; };
-  document.getElementById('clearBtn').onclick = () => { for(let i=0;i<grid.length;i++) grid[i]=makeCell(EMPTY); };
+  document.getElementById('clearBtn').onclick = () => { pushUndo(); for(let i=0;i<grid.length;i++) grid[i]=makeCell(EMPTY); };
   const showGrid = document.getElementById('showGrid');
+  const undoBtn = document.getElementById('undoBtn');
+  undoBtn.onclick = () => { if (!undo()) flash('nothing to undo'); };
 
   // ---------- Keyboard shortcuts ----------
   // 1-9, 0 = pick tool | space = pause | c = clear | g = grid | [ ] = brush size
   window.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); undoBtn.click(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox') return;
     if (/^[0-9]$/.test(e.key)) {
@@ -507,6 +524,7 @@
     let s = null;
     try { s = localStorage.getItem(SAVE_KEY); } catch (err) {}
     if (!s || s.length !== grid.length) { flash('no saved world found'); return; }
+    pushUndo();
     for (let i=0;i<grid.length;i++) grid[i] = makeCell(parseInt(s[i], 36));
     flash('world loaded ✔');
   };
