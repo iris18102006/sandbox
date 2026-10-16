@@ -88,6 +88,7 @@
   <button class="action-btn" id="loadBtn">📂 Load</button>
   <button class="action-btn" id="pngBtn">📸 PNG</button>
   <label>Speed <input type="range" id="speed" min="0.5" max="4" step="0.5" value="1"><span id="speedVal">1x</span></label>
+  <button class="action-btn" id="windBtn">💨 Wind: off</button>
   <label><input type="checkbox" id="showGrid"> Grid</label>
 </div>
 <div id="hint">Draw with mouse / touch. Fire burns wood & plants and turns water to steam. Plants grow in water. Microbes swim in water — they eat plants, reproduce, and die. Steam rises & condenses back to water. Shortcuts: 1-9/0 tools, Space pause, C clear, G grid, [ ] brush.</div>
@@ -237,6 +238,7 @@
     } else if (e.key === ' ') { e.preventDefault(); pauseBtn.click(); }
     else if (e.key === 'c' || e.key === 'C') document.getElementById('clearBtn').click();
     else if (e.key === 'e' || e.key === 'E') selectTool(EMPTY);
+    else if (e.key === 'w' || e.key === 'W') windBtn.click();
     else if (e.key === 'g' || e.key === 'G') showGrid.checked = !showGrid.checked;
     else if (e.key === 'b' || e.key === 'B') brushShape.value = brushShape.value === 'circle' ? 'square' : 'circle';
     else if (e.key === '[' || e.key === ']') {
@@ -268,9 +270,21 @@
 
   const randDir = () => Math.random()<0.5 ? -1 : 1;
 
+  // wind: 0 = off, 1 = blowing right, -1 = blowing left (only pushes light stuff)
+  let wind = 0;
+  const windBtn = document.getElementById('windBtn');
+  windBtn.onclick = () => {
+    wind = wind === 0 ? 1 : (wind === 1 ? -1 : 0);
+    windBtn.textContent = wind === 0 ? '💨 Wind: off' : (wind === 1 ? '💨 Wind →' : '💨 Wind ←');
+  };
+
   function updateCell(x,y,c) {
     const above = get(x,y-1), below = get(x,y+1);
     const left = get(x-1,y), right = get(x+1,y);
+
+    if (wind && (c.t===STEAM || c.t===FIRE) && Math.random()<0.35) {
+      if (tryMove(x,y,x+wind,y)) return;
+    }
 
     switch (c.t) {
       case SAND: {
