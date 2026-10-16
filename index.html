@@ -79,6 +79,9 @@
   <label>Brush <input type="range" id="brushSize" min="1" max="20" value="4"><span id="brushVal">4</span></label>
   <button class="action-btn" id="pauseBtn">⏸ Pause</button>
   <button class="action-btn" id="clearBtn">🗑 Clear</button>
+  <button class="action-btn" id="saveBtn">💾 Save</button>
+  <button class="action-btn" id="loadBtn">📂 Load</button>
+  <button class="action-btn" id="pngBtn">📸 PNG</button>
   <label>Speed <input type="range" id="speed" min="0.5" max="4" step="0.5" value="1"><span id="speedVal">1x</span></label>
   <label><input type="checkbox" id="showGrid"> Grid</label>
 </div>
@@ -466,6 +469,38 @@
       ctx.stroke();
     }
   }
+
+  // ---------- Save / Load / Export ----------
+  const SAVE_KEY = 'elemental-sandbox-save';
+  const flash = msg => {
+    statsEl.textContent = msg;
+    setTimeout(updateStats, 1200);
+  };
+  document.getElementById('saveBtn').onclick = () => {
+    try {
+      // one base-36 char per cell is plenty (types 0-11)
+      const s = grid.map(c => c.t.toString(36)).join('');
+      localStorage.setItem(SAVE_KEY, s);
+      flash('world saved ✔');
+    } catch (err) { flash('could not save (storage blocked?)'); }
+  };
+  document.getElementById('loadBtn').onclick = () => {
+    let s = null;
+    try { s = localStorage.getItem(SAVE_KEY); } catch (err) {}
+    if (!s || s.length !== grid.length) { flash('no saved world found'); return; }
+    for (let i=0;i<grid.length;i++) grid[i] = makeCell(parseInt(s[i], 36));
+    flash('world loaded ✔');
+  };
+  document.getElementById('pngBtn').onclick = () => {
+    render(); // make sure the canvas is current
+    canvas.toBlob(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'elemental-sandbox.png';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+  };
 
   // ---------- Stats ----------
   const statsEl = document.getElementById('stats');
