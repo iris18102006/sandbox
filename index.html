@@ -81,7 +81,7 @@
   <button class="action-btn" id="clearBtn">🗑 Clear</button>
   <label><input type="checkbox" id="showGrid"> Grid</label>
 </div>
-<div id="hint">Draw with mouse / touch. Fire burns wood & plants and turns water to steam. Plants grow in water. Microbes swim in water — they eat plants, reproduce, and die. Steam rises & condenses back to water.</div>
+<div id="hint">Draw with mouse / touch. Fire burns wood & plants and turns water to steam. Plants grow in water. Microbes swim in water — they eat plants, reproduce, and die. Steam rises & condenses back to water. Shortcuts: 1-9/0 tools, Space pause, C clear, G grid, [ ] brush.</div>
 <div id="stats"></div>
 
 <script>
@@ -134,15 +134,21 @@
   // ---------- Toolbar ----------
   let currentTool = SAND;
   const toolbar = document.getElementById('toolbar');
-  [SAND, WATER, OIL, WOOD, FIRE, PLANT, MICROBE, LAVA, STONE, WALL, EMPTY].forEach(t => {
+  const TOOLS = [SAND, WATER, OIL, WOOD, FIRE, PLANT, MICROBE, LAVA, STONE, WALL, EMPTY];
+  const toolBtns = {};
+  function selectTool(t) {
+    currentTool = t;
+    document.querySelectorAll('.tool-btn').forEach(x=>x.classList.remove('active'));
+    toolBtns[t].classList.add('active');
+  }
+  TOOLS.forEach((t, i) => {
     const b = document.createElement('button');
     b.className = 'tool-btn' + (t===currentTool?' active':'');
+    const key = i < 9 ? i+1 : (i === 9 ? 0 : '');
+    b.title = key !== '' ? `Shortcut: ${key}` : '';
     b.innerHTML = `<span class="dot" style="background:${EL[t].dot}"></span>${EL[t].name}`;
-    b.onclick = () => {
-      currentTool = t;
-      document.querySelectorAll('.tool-btn').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active');
-    };
+    b.onclick = () => selectTool(t);
+    toolBtns[t] = b;
     toolbar.appendChild(b);
   });
 
@@ -188,6 +194,23 @@
   pauseBtn.onclick = () => { paused=!paused; pauseBtn.textContent = paused?'▶ Play':'⏸ Pause'; };
   document.getElementById('clearBtn').onclick = () => { for(let i=0;i<grid.length;i++) grid[i]=makeCell(EMPTY); };
   const showGrid = document.getElementById('showGrid');
+
+  // ---------- Keyboard shortcuts ----------
+  // 1-9, 0 = pick tool | space = pause | c = clear | g = grid | [ ] = brush size
+  window.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox') return;
+    if (/^[0-9]$/.test(e.key)) {
+      const i = e.key === '0' ? 9 : (+e.key - 1);
+      if (TOOLS[i] !== undefined) selectTool(TOOLS[i]);
+    } else if (e.key === ' ') { e.preventDefault(); pauseBtn.click(); }
+    else if (e.key === 'c' || e.key === 'C') document.getElementById('clearBtn').click();
+    else if (e.key === 'g' || e.key === 'G') showGrid.checked = !showGrid.checked;
+    else if (e.key === '[' || e.key === ']') {
+      const v = Math.min(+brushInput.max, Math.max(+brushInput.min, +brushInput.value + (e.key === ']' ? 1 : -1)));
+      brushInput.value = v; brushVal.textContent = v;
+    }
+  });
 
   // helper: try to move cell from (x,y) to (nx,ny); returns true if moved
   function tryMove(x,y,nx,ny) {
