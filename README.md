@@ -19,6 +19,7 @@ A falling-sand style cellular automaton sandbox that runs entirely in the browse
 |  **Oil** | Floats on water, sand sinks through it, burns for a long time |
 |  **Lava** | Thick slow liquid, ignites wood/plants/oil, turns to stone when it touches water |
 |  **Stone** | Solid left behind when lava cools |
+|  **Acid** | Sinks through water, dissolves wood, plants, sand, stone and microbes, gets used up doing it |
 |  **Wall** | Indestructible solid |
 
 ## Microbes
@@ -37,6 +38,10 @@ Microbes are simple autonomous agents with an energy system:
 - **Brush size** — slider in the control bar
 - **Pause / Play** — freeze the simulation
 - **Clear** — wipe the world
+- **Shape** — circle or square brush (a preview outline follows your cursor)
+- **Undo** — step back up to 15 strokes
+- **Scene** — reset to the starter scene
+- **Wind** — off / right / left, blows fire and steam sideways
 - **Speed** — 0.5x to 4x simulation speed
 - **Save / Load** — keep one world in your browser (localStorage)
 - **PNG** — download the current canvas as an image
@@ -50,6 +55,10 @@ Microbes are simple autonomous agents with an energy system:
 | `Space` | Pause / play |
 | `C` | Clear |
 | `G` | Toggle grid |
+| `B` | Toggle brush shape |
+| `W` | Cycle wind |
+| `E` | Eraser |
+| `Ctrl+Z` | Undo |
 | `[` / `]` | Smaller / bigger brush |
 
 ## Running locally
@@ -59,3 +68,7 @@ Just open `index.html` in any modern browser. Or serve it:
 ```bash
 python3 -m http.server 8000
 # then visit http://localhost:8000
+
+## Deploy on GitHub Pages
+
+It's a single static file, so Pages works out of the box: repo **Settings → Pages → Deploy from a branch → `main` / root**. The game will be live at `https://<your-username>.github.io/sandbox/`.
