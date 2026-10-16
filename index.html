@@ -47,8 +47,8 @@
   .tool-btn:hover { border-color: #58a6ff; transform: translateY(-1px); }
   .tool-btn.active { border-color: #58a6ff; background: #1f6feb22; box-shadow: 0 0 10px #58a6ff55; }
   .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
-  #canvas-wrap { position: relative; border: 2px solid #30363d; border-radius: 10px; overflow: hidden; line-height: 0; }
-  canvas { display: block; cursor: crosshair; image-rendering: pixelated; background: #000; }
+  #canvas-wrap { max-width: 100%; position: relative; border: 2px solid #30363d; border-radius: 10px; overflow: hidden; line-height: 0; }
+  canvas { display: block; cursor: crosshair; image-rendering: pixelated; background: #000; max-width: 100%; height: auto; touch-action: none; }
   #controls {
     display: flex;
     gap: 14px;
@@ -184,8 +184,10 @@
 
   function canvasPos(e) {
     const rect = canvas.getBoundingClientRect();
-    const px = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const py = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    // the canvas can be scaled down by CSS on small screens, so map back to grid space
+    const scale = canvas.width / rect.width;
+    const px = ((e.touches ? e.touches[0].clientX : e.clientX) - rect.left) * scale;
+    const py = ((e.touches ? e.touches[0].clientY : e.clientY) - rect.top) * scale;
     return [Math.floor(px/CELL), Math.floor(py/CELL)];
   }
   canvas.addEventListener('mousedown', e => { drawing=true; const [x,y]=canvasPos(e); paint(x,y); });
