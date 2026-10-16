@@ -83,6 +83,7 @@
   <label>Shape <select id="brushShape"><option value="circle">● Circle</option><option value="square">■ Square</option></select></label>
   <button class="action-btn" id="pauseBtn">⏸ Pause</button>
   <button class="action-btn" id="undoBtn">↩ Undo</button>
+  <button class="action-btn" id="sceneBtn">🏞 Scene</button>
   <button class="action-btn" id="clearBtn">🗑 Clear</button>
   <button class="action-btn" id="saveBtn">💾 Save</button>
   <button class="action-btn" id="loadBtn">📂 Load</button>
@@ -628,6 +629,11 @@
     }
   }
   starterScene();
+  document.getElementById('sceneBtn').onclick = () => {
+    pushUndo();
+    for (let i=0;i<grid.length;i++) grid[i] = makeCell(EMPTY);
+    starterScene();
+  };
 
   let lastT = 0, acc = 0;
   let STEP_MS = 1000/60;
