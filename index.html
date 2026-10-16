@@ -96,7 +96,7 @@
   ctx.imageSmoothingEnabled = false;
 
   // ---------- Elements ----------
-  const EMPTY=0, WALL=1, SAND=2, WATER=3, WOOD=4, FIRE=5, PLANT=6, STEAM=7, MICROBE=8, LAVA=9, STONE=10;
+  const EMPTY=0, WALL=1, SAND=2, WATER=3, WOOD=4, FIRE=5, PLANT=6, STEAM=7, MICROBE=8, LAVA=9, STONE=10, OIL=11;
   const EL = {
     [EMPTY]:  { name:'Erase',    color:null,      dot:'#0d1117' },
     [WALL]:   { name:'Wall',     color:'#8b949e', dot:'#8b949e' },
@@ -108,6 +108,7 @@
     [MICROBE]:{ name:'Microbe',  color:'#d4a5ff', dot:'#d4a5ff' },
     [LAVA]:   { name:'Lava',     color:'#ff6a00', dot:'#ff6a00' },
     [STONE]:  { name:'Stone',    color:'#5a5f66', dot:'#5a5f66' },
+    [OIL]:    { name:'Oil',      color:'#4a3a1a', dot:'#6b5420' },
   };
 
   // ---------- Grid ----------
@@ -133,7 +134,7 @@
   // ---------- Toolbar ----------
   let currentTool = SAND;
   const toolbar = document.getElementById('toolbar');
-  [SAND, WATER, WOOD, FIRE, PLANT, MICROBE, LAVA, STONE, WALL, EMPTY].forEach(t => {
+  [SAND, WATER, OIL, WOOD, FIRE, PLANT, MICROBE, LAVA, STONE, WALL, EMPTY].forEach(t => {
     const b = document.createElement('button');
     b.className = 'tool-btn' + (t===currentTool?' active':'');
     b.innerHTML = `<span class="dot" style="background:${EL[t].dot}"></span>${EL[t].name}`;
@@ -218,7 +219,7 @@
     switch (c.t) {
       case SAND: {
         if (below && below.t===EMPTY) { tryMove(x,y,x,y+1); break; }
-        if (below && below.t===WATER && Math.random()<0.6) { trySwap(x,y,x,y+1,[WATER]); break; }
+        if (below && (below.t===WATER || below.t===OIL) && Math.random()<0.6) { trySwap(x,y,x,y+1,[WATER,OIL]); break; }
         const d = randDir();
         const diag1 = get(x+d,y+1), diag2 = get(x-d,y+1);
         if (diag1 && diag1.t===EMPTY) { tryMove(x,y,x+d,y+1); break; }
@@ -229,6 +230,7 @@
       }
       case WATER: {
         if (below && (below.t===EMPTY || below.t===STEAM)) { tryMove(x,y,x,y+1); break; }
+        if (below && below.t===OIL && Math.random()<0.5) { trySwap(x,y,x,y+1,[OIL]); break; }
         const d = randDir();
         if (get(x+d,y+1) && get(x+d,y+1).t===EMPTY && Math.random()<0.8) { tryMove(x,y,x+d,y+1); break; }
         if (get(x-d,y+1) && get(x-d,y+1).t===EMPTY && Math.random()<0.8) { tryMove(x,y,x-d,y+1); break; }
@@ -245,6 +247,10 @@
           if (!n) continue;
           if (n.t===WOOD && Math.random()<0.08) set(x+dx,y+dy,makeCell(FIRE));
           if (n.t===PLANT && Math.random()<0.25) set(x+dx,y+dy,makeCell(FIRE));
+          if (n.t===OIL && Math.random()<0.30) {
+            const f = makeCell(FIRE); f.life += 40; // oil burns longer
+            set(x+dx,y+dy,f);
+          }
           if (n.t===WATER && Math.random()<0.4) {
             // extinguish → steam
             set(x+dx,y+dy,makeCell(STEAM));
@@ -275,6 +281,18 @@
         }
         break;
       }
+      case OIL: {
+        // flows like water but a bit lazier, floats on top of it
+        if (below && below.t===EMPTY) { tryMove(x,y,x,y+1); break; }
+        if (Math.random()<0.7) {
+          const d = randDir();
+          if (get(x+d,y+1) && get(x+d,y+1).t===EMPTY) { tryMove(x,y,x+d,y+1); break; }
+          if (get(x-d,y+1) && get(x-d,y+1).t===EMPTY) { tryMove(x,y,x-d,y+1); break; }
+          if (get(x+d,y) && get(x+d,y).t===EMPTY) { tryMove(x,y,x+d,y); break; }
+          if (get(x-d,y) && get(x-d,y).t===EMPTY) { tryMove(x,y,x-d,y); break; }
+        }
+        break;
+      }
       case LAVA: {
         // react with neighbours
         const nbs = [[0,-1],[0,1],[-1,0],[1,0]];
@@ -290,6 +308,7 @@
           if (n.t===WOOD  && Math.random()<0.10) set(x+dx,y+dy,makeCell(FIRE));
           if (n.t===PLANT && Math.random()<0.30) set(x+dx,y+dy,makeCell(FIRE));
           if (n.t===MICROBE) set(x+dx,y+dy,makeCell(EMPTY));
+          if (n.t===OIL && Math.random()<0.40) { const f = makeCell(FIRE); f.life += 40; set(x+dx,y+dy,f); }
         }
         // occasionally spit a spark upward
         if (above && above.t===EMPTY && Math.random()<0.004) set(x,y-1,makeCell(FIRE));
@@ -429,7 +448,7 @@
   function updateStats() {
     const counts = {};
     for (const c of grid) counts[c.t]=(counts[c.t]||0)+1;
-    statsEl.textContent = `sand:${counts[SAND]||0}  water:${counts[WATER]||0}  fire:${counts[FIRE]||0}  plants:${counts[PLANT]||0}  microbes:${counts[MICROBE]||0}  steam:${counts[STEAM]||0}  lava:${counts[LAVA]||0}  stone:${counts[STONE]||0}`;
+    statsEl.textContent = `sand:${counts[SAND]||0}  water:${counts[WATER]||0}  fire:${counts[FIRE]||0}  plants:${counts[PLANT]||0}  microbes:${counts[MICROBE]||0}  steam:${counts[STEAM]||0}  lava:${counts[LAVA]||0}  stone:${counts[STONE]||0}  oil:${counts[OIL]||0}`;
   }
   setInterval(updateStats, 500);
 
