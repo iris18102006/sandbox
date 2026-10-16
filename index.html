@@ -80,6 +80,7 @@
 <div id="canvas-wrap"><canvas id="game"></canvas></div>
 <div id="controls">
   <label>Brush <input type="range" id="brushSize" min="1" max="20" value="4"><span id="brushVal">4</span></label>
+  <label>Shape <select id="brushShape"><option value="circle">● Circle</option><option value="square">■ Square</option></select></label>
   <button class="action-btn" id="pauseBtn">⏸ Pause</button>
   <button class="action-btn" id="clearBtn">🗑 Clear</button>
   <button class="action-btn" id="saveBtn">💾 Save</button>
@@ -163,12 +164,13 @@
   let drawing = false;
   const brushInput = document.getElementById('brushSize');
   const brushVal = document.getElementById('brushVal');
+  const brushShape = document.getElementById('brushShape');
   brushInput.oninput = () => brushVal.textContent = brushInput.value;
 
   function paint(cx, cy) {
     const r = +brushInput.value;
     for (let dy=-r; dy<=r; dy++) for (let dx=-r; dx<=r; dx++) {
-      if (dx*dx+dy*dy > r*r) continue;
+      if (brushShape.value === 'circle' && dx*dx+dy*dy > r*r) continue;
       const x = cx+dx, y = cy+dy;
       if (!inBounds(x,y)) continue;
       if (currentTool === EMPTY) { set(x,y,makeCell(EMPTY)); continue; }
@@ -215,6 +217,7 @@
     } else if (e.key === ' ') { e.preventDefault(); pauseBtn.click(); }
     else if (e.key === 'c' || e.key === 'C') document.getElementById('clearBtn').click();
     else if (e.key === 'g' || e.key === 'G') showGrid.checked = !showGrid.checked;
+    else if (e.key === 'b' || e.key === 'B') brushShape.value = brushShape.value === 'circle' ? 'square' : 'circle';
     else if (e.key === '[' || e.key === ']') {
       const v = Math.min(+brushInput.max, Math.max(+brushInput.min, +brushInput.value + (e.key === ']' ? 1 : -1)));
       brushInput.value = v; brushVal.textContent = v;
