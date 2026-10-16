@@ -162,6 +162,7 @@
 
   // ---------- Drawing ----------
   let drawing = false;
+  let hover = null; // grid position under the mouse, for the brush preview
   const brushInput = document.getElementById('brushSize');
   const brushVal = document.getElementById('brushVal');
   const brushShape = document.getElementById('brushShape');
@@ -193,7 +194,8 @@
     return [Math.floor(px/CELL), Math.floor(py/CELL)];
   }
   canvas.addEventListener('mousedown', e => { drawing=true; const [x,y]=canvasPos(e); paint(x,y); });
-  canvas.addEventListener('mousemove', e => { if(!drawing) return; const [x,y]=canvasPos(e); paint(x,y); });
+  canvas.addEventListener('mousemove', e => { const [x,y]=canvasPos(e); hover=[x,y]; if(!drawing) return; paint(x,y); });
+  canvas.addEventListener('mouseleave', () => { hover=null; });
   window.addEventListener('mouseup', () => drawing=false);
   canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing=true; const [x,y]=canvasPos(e); paint(x,y); }, {passive:false});
   canvas.addEventListener('touchmove', e => { e.preventDefault(); if(!drawing) return; const [x,y]=canvasPos(e); paint(x,y); }, {passive:false});
@@ -469,6 +471,15 @@
       }
     }
     ctx.putImageData(imgData,0,0);
+    if (hover) {
+      const r = +brushInput.value;
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (brushShape.value === 'circle') ctx.arc((hover[0]+0.5)*CELL, (hover[1]+0.5)*CELL, (r+0.5)*CELL, 0, Math.PI*2);
+      else ctx.rect((hover[0]-r)*CELL, (hover[1]-r)*CELL, (2*r+1)*CELL, (2*r+1)*CELL);
+      ctx.stroke();
+    }
     if (showGrid.checked) {
       ctx.strokeStyle='rgba(255,255,255,0.05)';
       ctx.beginPath();
