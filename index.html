@@ -79,6 +79,7 @@
   <label>Brush <input type="range" id="brushSize" min="1" max="20" value="4"><span id="brushVal">4</span></label>
   <button class="action-btn" id="pauseBtn">⏸ Pause</button>
   <button class="action-btn" id="clearBtn">🗑 Clear</button>
+  <label>Speed <input type="range" id="speed" min="0.5" max="4" step="0.5" value="1"><span id="speedVal">1x</span></label>
   <label><input type="checkbox" id="showGrid"> Grid</label>
 </div>
 <div id="hint">Draw with mouse / touch. Fire burns wood & plants and turns water to steam. Plants grow in water. Microbes swim in water — they eat plants, reproduce, and die. Steam rises & condenses back to water. Shortcuts: 1-9/0 tools, Space pause, C clear, G grid, [ ] brush.</div>
@@ -513,13 +514,19 @@
   starterScene();
 
   let lastT = 0, acc = 0;
-  const STEP_MS = 1000/60;
+  let STEP_MS = 1000/60;
+  const speedInput = document.getElementById('speed');
+  const speedVal = document.getElementById('speedVal');
+  speedInput.oninput = () => {
+    speedVal.textContent = speedInput.value + 'x';
+    STEP_MS = 1000 / (60 * +speedInput.value);
+  };
   function loop(t) {
     requestAnimationFrame(loop);
     if (paused) { render(); return; }
     acc += t - lastT; lastT = t;
     let n = 0;
-    while (acc >= STEP_MS && n < 3) { step(); acc -= STEP_MS; n++; }
+    while (acc >= STEP_MS && n < 8) { step(); acc -= STEP_MS; n++; }
     render();
   }
   requestAnimationFrame(t => { lastT = t; requestAnimationFrame(loop); });
