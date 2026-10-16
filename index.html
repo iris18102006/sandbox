@@ -105,7 +105,7 @@
   ctx.imageSmoothingEnabled = false;
 
   // ---------- Elements ----------
-  const EMPTY=0, WALL=1, SAND=2, WATER=3, WOOD=4, FIRE=5, PLANT=6, STEAM=7, MICROBE=8, LAVA=9, STONE=10, OIL=11;
+  const EMPTY=0, WALL=1, SAND=2, WATER=3, WOOD=4, FIRE=5, PLANT=6, STEAM=7, MICROBE=8, LAVA=9, STONE=10, OIL=11, ACID=12;
   const EL = {
     [EMPTY]:  { name:'Erase',    color:null,      dot:'#0d1117' },
     [WALL]:   { name:'Wall',     color:'#8b949e', dot:'#8b949e' },
@@ -117,6 +117,7 @@
     [MICROBE]:{ name:'Microbe',  color:'#d4a5ff', dot:'#d4a5ff' },
     [LAVA]:   { name:'Lava',     color:'#ff6a00', dot:'#ff6a00' },
     [STONE]:  { name:'Stone',    color:'#5a5f66', dot:'#5a5f66' },
+    [ACID]:   { name:'Acid',     color:'#9be000', dot:'#9be000' },
     [OIL]:    { name:'Oil',      color:'#4a3a1a', dot:'#6b5420' },
   };
 
@@ -143,7 +144,7 @@
   // ---------- Toolbar ----------
   let currentTool = SAND;
   const toolbar = document.getElementById('toolbar');
-  const TOOLS = [SAND, WATER, OIL, WOOD, FIRE, PLANT, MICROBE, LAVA, STONE, WALL, EMPTY];
+  const TOOLS = [SAND, WATER, OIL, WOOD, FIRE, PLANT, MICROBE, LAVA, ACID, STONE, WALL, EMPTY];
   const toolBtns = {};
   function selectTool(t) {
     currentTool = t;
@@ -235,6 +236,7 @@
       if (TOOLS[i] !== undefined) selectTool(TOOLS[i]);
     } else if (e.key === ' ') { e.preventDefault(); pauseBtn.click(); }
     else if (e.key === 'c' || e.key === 'C') document.getElementById('clearBtn').click();
+    else if (e.key === 'e' || e.key === 'E') selectTool(EMPTY);
     else if (e.key === 'g' || e.key === 'G') showGrid.checked = !showGrid.checked;
     else if (e.key === 'b' || e.key === 'B') brushShape.value = brushShape.value === 'circle' ? 'square' : 'circle';
     else if (e.key === '[' || e.key === ']') {
@@ -333,6 +335,28 @@
           const d = randDir();
           if (get(x+d,y) && get(x+d,y).t===EMPTY) tryMove(x,y,x+d,y);
         }
+        break;
+      }
+      case ACID: {
+        // eats most solids, gets used up while doing it, diluted by water
+        const nbs = [[0,-1],[0,1],[-1,0],[1,0]];
+        for (const [dx,dy] of nbs) {
+          const n = get(x+dx,y+dy);
+          if (!n) continue;
+          if ((n.t===WOOD || n.t===PLANT || n.t===SAND || n.t===STONE || n.t===MICROBE) && Math.random()<0.15) {
+            set(x+dx,y+dy,makeCell(EMPTY));
+            if (Math.random()<0.5) { set(x,y,makeCell(EMPTY)); return; }
+          }
+          if (n.t===WATER && Math.random()<0.02) { set(x,y,makeCell(WATER)); return; }
+        }
+        // denser than water, so it sinks through it
+        if (below && below.t===WATER && Math.random()<0.4) { trySwap(x,y,x,y+1,[WATER]); break; }
+        if (below && below.t===EMPTY) { tryMove(x,y,x,y+1); break; }
+        const d = randDir();
+        if (get(x+d,y+1) && get(x+d,y+1).t===EMPTY) { tryMove(x,y,x+d,y+1); break; }
+        if (get(x-d,y+1) && get(x-d,y+1).t===EMPTY) { tryMove(x,y,x-d,y+1); break; }
+        if (get(x+d,y) && get(x+d,y).t===EMPTY) { tryMove(x,y,x+d,y); break; }
+        if (get(x-d,y) && get(x-d,y).t===EMPTY) { tryMove(x,y,x-d,y); break; }
         break;
       }
       case OIL: {
@@ -462,6 +486,10 @@
       return shade('#2f6fed', w*0.15-0.05);
     }
     if (c.t===STEAM) return [200,200,210];
+    if (c.t===ACID) {
+      const f = Math.sin((x+y*3)*0.5 + performance.now()*0.003)*0.5+0.5;
+      return [(140+40*f)|0, (210+30*f)|0, 0];
+    }
     if (c.t===LAVA) {
       const f = Math.sin((x*3+y)*0.4 + performance.now()*0.004)*0.5+0.5;
       return [255, (80+80*f)|0, (10*f)|0];
@@ -546,7 +574,7 @@
   function updateStats() {
     const counts = {};
     for (const c of grid) counts[c.t]=(counts[c.t]||0)+1;
-    statsEl.textContent = `sand:${counts[SAND]||0}  water:${counts[WATER]||0}  fire:${counts[FIRE]||0}  plants:${counts[PLANT]||0}  microbes:${counts[MICROBE]||0}  steam:${counts[STEAM]||0}  lava:${counts[LAVA]||0}  stone:${counts[STONE]||0}  oil:${counts[OIL]||0}`;
+    statsEl.textContent = `sand:${counts[SAND]||0}  water:${counts[WATER]||0}  fire:${counts[FIRE]||0}  plants:${counts[PLANT]||0}  microbes:${counts[MICROBE]||0}  steam:${counts[STEAM]||0}  lava:${counts[LAVA]||0}  stone:${counts[STONE]||0}  oil:${counts[OIL]||0}  acid:${counts[ACID]||0}`;
   }
   setInterval(updateStats, 500);
 
